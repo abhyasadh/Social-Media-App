@@ -94,9 +94,6 @@ class _WebAppState extends ConsumerState<WebApp> {
       child: Scaffold(
         body: Stack(
           children: [
-            WebViewWidget(
-              controller: controller,
-            ),
             if (isLoading)
               Center(
                 child: Column(
@@ -108,6 +105,9 @@ class _WebAppState extends ConsumerState<WebApp> {
                   ],
                 ),
               ),
+            WebViewWidget(
+              controller: controller,
+            ),
           ],
         ),
       ),
