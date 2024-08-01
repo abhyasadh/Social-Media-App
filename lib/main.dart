@@ -1,6 +1,5 @@
 import 'package:Yaallo/connectivity_notifier.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
@@ -51,16 +50,16 @@ class _WebAppState extends ConsumerState<WebApp> {
         allowsInlineMediaPlayback: true,
         mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},
       );
+
+      controller = WebViewController.fromPlatformCreationParams(params);
     } else {
       params = const PlatformWebViewControllerCreationParams();
+      controller = WebViewController();
     }
-
-    controller = WebViewController.fromPlatformCreationParams(params);
 
     if (controller.platform is AndroidWebViewController) {
       (controller.platform as AndroidWebViewController)
           .setMediaPlaybackRequiresUserGesture(false);
-
     }
     controller.setBackgroundColor(const Color(0xffffffff));
     controller.setJavaScriptMode(JavaScriptMode.unrestricted);
@@ -88,27 +87,24 @@ class _WebAppState extends ConsumerState<WebApp> {
     controller.loadRequest(Uri.parse('https://www.yaallo.com'));
   }
 
+  Future<bool> _onWillPop() async {
+    if (await controller.canGoBack()) {
+      controller.goBack();
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Scaffold(
-        body: Stack(
-          children: [
-            if (isLoading)
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset('assets/images/logo-black.png', width: 200,),
-                    const SizedBox(height: 20,),
-                    const CircularProgressIndicator(color: Color(0xffB0E3F5),),
-                  ],
-                ),
-              ),
-            WebViewWidget(
-              controller: controller,
-            ),
-          ],
+      child: WillPopScope(
+        onWillPop: _onWillPop,
+        child: Scaffold(
+          body: WebViewWidget(
+            controller: controller,
+          ),
         ),
       ),
     );
@@ -117,7 +113,8 @@ class _WebAppState extends ConsumerState<WebApp> {
 
 class NoInternetWidget extends StatelessWidget {
   final double bottomPadding;
-  const NoInternetWidget({super.key, this.bottomPadding=0});
+
+  const NoInternetWidget({super.key, this.bottomPadding = 0});
 
   @override
   Widget build(BuildContext context) {
